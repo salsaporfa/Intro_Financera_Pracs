@@ -1,0 +1,216 @@
+---
+title: "Intro. enginyeria financera - HW1"
+author:
+- Lou, Xinyu ()
+- Tarragó Boardman, Oliver ()
+- Casado Cano, Àngel ()
+date: "Last compiled on `r format(Sys.time(), '%d/%m/%Y')`"
+---
+
+1. Run the following code corresponding three quarterly time series data and answer the questions below.\
+
+```{r, eval=FALSE}
+data(Tbrate , package = " Ecdat ")
+library(tseries)
+# r = the 91 - day treasury bill rate
+# y = the log of real GDP
+# pi = the inflation rate
+
+# Questions a ) and b )
+plot(Tbrate)
+acf(Tbrate)
+# Consider only the diagonal plots which correspond to the ACF plots of r , y and pi
+adf.test(Tbrate [, 1])
+adf.test(Tbrate [, 2])
+adf.test(Tbrate [, 3])
+
+# Qeustions c ) and d )
+diff_rate = diff (Tbrate)
+adf.test(diff_rate [, 1])
+adf.test(diff_rate [, 2])
+adf.test(diff_rate [, 3])
+plot(diff_rate)
+acf(diff_rate)
+
+# Questions e ) , f ) , g ) and h )
+library (forecast)
+auto.arima (Tbrate [, 1] ,
+            max.P = 0 ,
+            max.Q = 0 ,
+            ic = " aic")
+
+# Questions i )
+fit1 = arima(Tbrate [, 1], order = c(?,?,?))
+acf(residuals(fit1))
+Box.test(residuals(fit1), lag = 10, type = " Ljung ") 
+```
+    
+  a) Describe the signs of nonstationarity seen in the time series and ACF plots.
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+data(Tbrate, package="Ecdat")
+library(tseries)
+```
+
+```{r}
+plot(Tbrate)
+acf(Tbrate)
+# Consider only the diagonal plots which correspond to the ACF plots of r , y and pi
+```
+
+Both the plot and the ACF show that neither of the tree variables is non-stationary. The plot of each variable seems to have a tendency, maybe the pi is less clear. The ACF plot for each variable shows a steady decay of the correlation each lag, which means the is non-stationary.
+
+  b) Use the augmented Dickey-Fuller tests to decide which of the series are nonstationary (search on R help for the definition of the test and what conclusions shows). Do the tests corroborate the conclusions of the time series ACF plots?
+  
+```{r}
+print(adf.test(Tbrate[, 1]))
+print(adf.test(Tbrate[, 2]))
+print(adf.test(Tbrate[, 3]))
+```
+
+The null hypothesis of the Dickey-Fuller test is that the time series is non-stationary. Since for each variable the p-value is much higher than 0.05, we do not reject the null hypothesis, so the time series are non-stationary.
+
+  c) Do the difference series appear stationary according to the augmented Dickey-Fuller test?
+  
+```{r}
+diff_rate = diff(Tbrate)
+print(adf.test(diff_rate[, 1]))
+print(adf.test(diff_rate[, 2]))
+print(adf.test(diff_rate[, 3]))
+plot(diff_rate)
+acf(diff_rate)
+```
+
+All the Dickey-Fuller tests, the plots and the ACFs show that the difference series appear stationary.
+
+  d) Do you see evidence of autocorrelation in the differentiated series? If so, describe these correlations.
+  
+We see evidence of autocorrelation in the differentiated series. Both for de _r_ and _y_ variables we see a positive correlation with the first lag, and for the _pi_ variable we see a negative correlation with the first lag.
+
+  e) What order of differentiation is chosen in auto.arima? Does this result agree with your previous conclusions?
+  
+```{r}
+library (forecast)
+print(auto.arima (Tbrate[, 1], ic = "aic"))
+```
+
+The function _auto.arima_ has chosen one order of differentiation (d=1). This result agrees with our previous calculation.
+
+  f) What model was chosen by AIC?
+
+The _auto.arima_ function, using the AIC criteria, chosen the model **ARIMA(0,1,1)**, that is a **MA(1)** model over the one time differentiated series.
+
+  g) Which goodness-of-fit criterion is being used here?
+
+The AIC criterion, which uses the log likelihood criterion.
+
+  h) Change the criterion to BIC. Does the best-fitting model then change?
+  
+```{r}
+print(auto.arima (Tbrate[, 1], ic = "bic"))
+```
+
+Using the BIC criterion, _auto.arima_ has chosen the same model than using the AIC criterion.
+
+  i) Do you think that there is residual autocorrelation? If so, describe this autocorrelation and suggest a mode appropriate model for the T-bill series.
+  
+
+```{r}
+fit1 = arima(Tbrate [, 1], order = c(0,1,1))
+acf(residuals(fit1))
+Box.test(residuals(fit1), lag = 10, type = "Ljung-Box") 
+```
+
+The ACF plot of the residuals shows no autocorrelation. The null hypothesis of the Ljung-Box test is that the residuals are independent, since the p-value is higher than 0.05 we have no statistical evidence to reject the null hypothesis, hence we can conclude that the residuals have no correlation.
+
+2. Consider the AR model
+$$
+Y_t=5-0.55Y_{t-1}+\epsilon_t
+$$
+
+and assume $\sigma^2_{\epsilon}$=1.2
+
+  a) Is the process stationary? Why?
+
+We can rewrite the expression as $ Y_t = c + \phi Y_{t-1} + \varepsilon_t \  with \   c = 5 \  and  \ \phi = -0.55 $.
+
+In AR models the covariance is stationary when |$\phi$|<1. In that case |-0.55|=0.55<1. 
+For that, this process is stationary.
+
+  b) What is the mean of this process?
+```{r}
+c <- 5
+phi <- -0.55
+sigma2 <- 1.2
+(mu <- c / (1 - phi))
+```
+
+The mean($\mu$) of this process is 
+$$
+\mu = \frac{c}{1 - \phi} = \frac{5}{1 - (-0.55)} 
+= \frac{5}{1 + 0.55} = \frac{5}{1.55} \approx 3.2258.
+$$
+
+
+  c) What is the variance of this process?
+
+```{r}
+var_y <- sigma2 / (1 - phi^2)
+```
+
+The variance of this process is
+
+$$
+\operatorname{Var}(Y_t) 
+= \frac{\sigma_\varepsilon^2}{1 - \phi^2} 
+= \frac{1.2}{1 - (-0.55)^2} 
+= \frac{1.2}{0.6975} \approx 1.7204.
+$$
+
+  d) What is the covariance function of this process?
+
+The covariance funcion of this process is
+
+```{r}
+h <- 0:5
+gamma_h <- phi^h * gamma0
+data.frame(h = h, gamma_h = gamma_h, rho_h = phi^h)
+```
+
+$$
+\hat{\gamma}(h) = \phi^h \gamma(0), \qquad 
+\hat{\rho}(h) = \phi^h = (-0.55)^h.
+\\
+Thus:
+\\
+\gamma(h) = (-0.55)^h \cdot 1.7204.
+$$
+
+
+3. An AR(3) model has been fit to a time series. The estimates are:
+
+
+$$
+ · \mu = 104, \quad \phi_1 = 0.4, \quad \phi_2 = 0.25, \quad \phi_3 = 0.1
+$$
+
+$$
+ · Y_{n-3} = 105, \quad Y_{n-2} = 102, \quad Y_{n-1} = 103, \quad Y_n = 99
+$$
+
+The last four observations were $Y_{n-3}=105, \quad Y_{n-2}=102, \quad Y_{n-1}=103 \quad and \quad Y_{n}=99$. Forecast $Y_{n+1}$ and $Y_{n+1}$
+
+
+4. Run the following code
+
+```{r}
+library(Ecdat)
+data("Mishkin")
+tb1=log(Mishkin[,3])
+```
+
+  a) Use the time series and ACF plots to determine the amount of differencing needed to obtain a stationary series.
+  
+  b) Next use `auto.arima` to determine the best-fitting nonseasonal ARIMA models. Use both AIC and BIC and compare results
+  
+  c) Examine the ACF of residuals for the model you selected. Do you see any problems?
