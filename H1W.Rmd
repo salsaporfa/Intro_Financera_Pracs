@@ -194,11 +194,36 @@ $$
  · \mu = 104, \quad \phi_1 = 0.4, \quad \phi_2 = 0.25, \quad \phi_3 = 0.1
 $$
 
+The last four observations were $Y_{n-3}=105, \quad Y_{n-2}=102, \quad Y_{n-1}=103 \quad and \quad Y_{n}=99$. Forecast $Y_{n+1}$ and $Y_{n+1}$
+
+For the forecast $Y_{n+1}$ we give the three observations that we have and compute to find the new observation.
+We replace the noisy for 0
+
 $$
- · Y_{n-3} = 105, \quad Y_{n-2} = 102, \quad Y_{n-1} = 103, \quad Y_n = 99
+\hat{Y}_{n+1}=\mu+\phi_1*(Y_n-\mu)+\phi_2*(Y_{n-1}-\mu)+\phi_3*(Y_{n-2}-\mu)
 $$
 
-The last four observations were $Y_{n-3}=105, \quad Y_{n-2}=102, \quad Y_{n-1}=103 \quad and \quad Y_{n}=99$. Forecast $Y_{n+1}$ and $Y_{n+1}$
+```{r}
+mu <-104
+phi1 <- 0.4
+phi2 <- 0.25
+phi3 <- 0.1
+Y <- c(105, 102, 103, 99)
+Y1 <- mu + phi1*(Y[4]-mu) + phi2*(Y[3]-mu) + phi3*(Y[2]-mu)
+Y2 <- mu + phi1*(Y1 - mu) + phi2*(Y[4]-mu) + phi3*(Y[3]-mu)
+
+Y1
+Y2
+
+```
+$$
+\hat{Y}_{n+1}=104+0.4*(99-104)+0.25*(103-104)+0.1*(102-104)=101.55
+$$
+$$
+\hat{Y}_{n+2}=\mu+\phi_1*(Y_{n+1}-\mu)+\phi_2*(Y_{n}-\mu)+\phi_3*(Y_{n-1}-\mu) \\
+\hat{Y}_{n+2}=104+0.4*(101.55-104)+0.25*(99-104)+0.1*(103-104)=101.67
+
+$$
 
 
 4. Run the following code
