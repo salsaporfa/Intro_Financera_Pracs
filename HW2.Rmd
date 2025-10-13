@@ -1,0 +1,106 @@
+---
+title: "Homework 2"
+author: 
+  - "Oliver Tarragó Boardman 1527541;"
+  - "Andrea Garcia Vigil 1635702;"
+  - "Àngel Casadó Cano 1630811;"
+  - "Marc Torre-Marin Pujol 1638100;"
+  - "Xinyu Lou 1635130"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Exercise 1
+
+Run the following code corresponding three quarterly time series data and answer the questions below.
+
+```{r}
+ data(Tbrate,package="Ecdat")
+ library(tseries)
+ library(fGarch)
+#r = the 91-day treasury bill rate
+#pi = the inflation rate
+#y = the log of real GDP
+Tbill=Tbrate[,1]
+Del.Tbill=diff(Tbill)
+garch.model=garchFit(formula=~arma(1,0)+garch(1,0),Tbill)
+summary(garch.model) 
+ garch.model@fit$matcoef 
+
+ res=residuals(garch.model) 
+ res_std=res/garch.model@sigma.t 
+ par(mfrow=c(2,3)) 
+ plot(res)
+ acf(res)
+ acf(res^2)
+ plot(res_std)
+ acf(res_std)
+ acf(res_std^2)
+```
+
+   (a) Plot both `Tbill`and `Del.Tbill`. Use both time series and ACF plots, ADF and KPSS test to show that the series are or are not stationary. What kind of heterostedasticity can you see in `Del.Tbill` series?
+```{r}
+Tbill=Tbrate[,1]
+Del.Tbill=diff(Tbill)
+par(mfrow=c(2,2))
+plot.ts(Tbill, main="T-bill")
+acf(Tbill, main="ACF Tbill")
+plot.ts(Del.Tbill, main="Diff D-bill")
+acf(Del.Tbill, main="ACF diff Tbill")
+
+adf.test(Tbill)
+kpss.test(Tbill)
+adf.test(Del.Tbill)
+kpss.test(Del.Tbill)
+```
+
+   (b) Fit an ARMA(1,0)/GARCH(1,0) model using `garchFit` to the series believed to be stationary? What are the estimates for the parameters in the model?
+   
+   (c) What is plotted by acf(res)? What, if anything, does the plot tell you about the fit of the model?
+   
+   (d) What is plotted by acf(res^2)? What, if anything does the plot tell you about the fit of the model?
+   
+   (e) What is plotted by acf(res_std^2)? What if anything does the plot tell you about the fit of the model?
+   
+   (f) Is there anything noteworthy in the plot produced by the plot (res_std)?
+   
+   (g) Now fit an ARMA/GARCH to the series `diff(log(Tbill))`. Do you see any advantages of working with the difference of the logarithms of the T-bill rate?
+   
+# Exercise 2
+
+On Black Monday, the return on the S&P 500 was -22.8%. Ouch! This exercise attempts to answer the question, what was the conditional probability of a return this small on Black Monday? Conditional means given the information avaliable the previous trading day. Run the following code:
+  
+```{r}
+library(Ecdat)
+library(fGarch)
+data(SP500,package="Ecdat")
+returnBM=SP500$r500[1805]
+x=SP500$r500[(1804-2*253+1):1804]
+plot(c(x,returnBM),type= '1' )
+results=garchFit(~arma(1,0)+garch(1,1),data=x,cond.dist="std")
+dfhat=as.numeric(results@fit$par[6])
+forecast=predict(results,n.ahead=1)
+```
+
+The SP500 returns are in the data set `SP500` in the `Ecdat` package. The returns are in the variable`r500`. Black Monday is the 1850th return in the data set. This code fits an AR(1)/GARCH(1,1) model to the last two years of data before Black Monday. The conditional distribution of the white noise is the t-distribution. From the plot you can see that the Black Monday was highly unusual. The parameter estimates are in results@fit$par and the sixth parameter are the degrees of freedom of the t-distribution. The predict function is used to predict one step ahead. The object `forecast` will contain, mean forecast, mean error and standard deviation, which is the conditional standard deviation of the return on Black Monday.
+ 
+   (a) Use the information above to calculate the conditional probability of a return less or equal to-0.228 on Black Monday.
+   
+   (b) Compute and plot the standarized residuals. Also plot the `ACF` of the residuals and their squares. Do they indicate an adequate model fit?
+   
+   (c) Would an AR(1)/ARCH(1) model provide an adequate fit?
+   
+   (d) Does an AR(1) model provide an adequate fit?
+   
+# Exercise 3
+
+Download the data set `data_HW_3.RData` from Moodle. Follow the step-by-step model selection to fit an ARMA(p,q)/GARCH(P,Q) model to it. (Hint: q=0 and all other orders are less or equal to 2)
+
+```{r}
+load("data_HW_3.RData")
+```
+
