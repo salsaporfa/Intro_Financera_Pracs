@@ -47,6 +47,11 @@ Box.test(residuals(fit1), lag = 10, type = " Ljung ")
   a) Describe the signs of nonstationarity seen in the time series and ACF plots.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
+packages <- c("Ecdat")
+to_install <- packages[!vapply(packages, requireNamespace, logical(1), quietly = TRUE)]
+if (length(to_install) > 0) {
+  install.packages(to_install)
+}
 data(Tbrate, package="Ecdat")
 library(tseries)
 ```
@@ -122,3 +127,108 @@ Box.test(residuals(fit1), lag = 10, type = "Ljung-Box")
 
 The ACF plot of the residuals shows no autocorrelation. The null hypothesis of the Ljung-Box test is that the residuals are independent, since the p-value is higher than 0.05 we have no statistical evidence to reject the null hypothesis, hence we can conclude that the residuals have no correlation.
 
+2. Consider the AR model $Y_{t}= 5 - 0.55Y_{t-1} + \epsilon_{t}$ and assume $\sigma_{\epsilon}^2 = 1.2$.
+
+  a) Is the process stationary? Why?
+  
+Yes, since $|\phi| < 1$ the process is asymptotically weak-stationary, because all $Y_t$ will have the same expectancy for all $t$ as $t$ tends to infinity.
+
+  b) What is the mean of this process?
+  
+$$
+\begin{aligned}
+  E[Y_t] &= E[5 - 0.55Y_{t-1} + \epsilon_{t}] = 5 - 0.55E[Y_{t-1}] + 0 \\
+         &= 5 - 0.55(5 - 0.55(...(5 - 0.55E[Y_0])...)) \\
+         &= 5(1 - 0.55 + 0.55^2 - 0.55^3 +...+(-0.55)^{t-1}) + (-0.55)^t E(Y_0) \\
+         &= 5 \sum_{k=0}^{t-1}{(-0.55)^k} + (-0.55)^t E[Y_0] \\
+         &= 5 \cdot \frac{1-(-0.55)^t}{1-(-0.55)} + (-0.55)^t E[Y_0] \\
+         &= 5 \cdot \frac{1-(-0.55)^t}{1.55} + (-0.55)^t E[Y_0]
+\end{aligned}
+$$
+
+Taking the limit $t \to \inf$ we obtain $\lim_{t \to \inf} E[Y_t] = \frac{5}{1.55} \approx 3.23$.
+
+Another way to know the expectancy is to know that in $Y_t = c + \phi Y_{t-1} + \epsilon_t$, $c = (1-\phi)\mu$, so, in our case, $5 = (1-(-0.55)) \mu \implies \mu = 5/1.55 \approx 3.23$.
+
+  c) What is the variance of this process?
+  
+$$
+\begin{aligned}
+  \text{Var}[Y_t] &= \text{Var}[5 - 0.55Y_{t-1} + \epsilon_{t}] = 0 + 0.55^2 \text{Var}[Y_{t-1}] + \sigma_\epsilon^2 \\
+  &= \sigma_\epsilon^2 + 0.55^2 \text{Var}[Y_{t-1}] \\
+  &= \sigma_\epsilon^2 + 0.55^2 (\sigma_\epsilon^2 + 0.55^2(... + 0.55^2(\sigma_\epsilon^2 + 0.55^2\text{Var}[Y_0])...)) \\
+  &= \sigma_\epsilon^2 (1 + 0.55^2 + 0.55^4 + ... + 0.55^{2(t-1)}) + 0.55^{2t} \text{Var}[Y_0] \\
+  &= \sigma_\epsilon^2 \sum_{k=0}^{t-1}{(0.55^2)^k} + 0 = \sigma_\epsilon^2 \sum_{k=0}^{t-1}{(0.55^2)^k} \\
+  &= \sigma_\epsilon^2 \cdot \frac{1 - 0.55^{2t}}{1-0.55^2} = \sigma_\epsilon^2 \cdot \frac{1 - 0.55^{2t}}{0.6975}
+\end{aligned}
+$$
+
+Taking the limit $t \to \inf$ we obtain $\lim_{t \to \inf} \text{Var}[Y_t] = \frac{\sigma_\epsilon^2}{0.6975} = \frac{1.2}{0.6975} \approx 1.72$.
+
+  d) What is the covariance function of this process?
+
+$\gamma_h = (-0.55)^h \gamma_0 = (-0.55)^h \text{Var}[Y_t] = (-0.55)^h \cdot \frac{1.2}{0.6975} \approx (-0.55)^h \cdot 1.72$
+
+3. An AR(3) model has been ﬁt to a time series. The estimates are $\hat{\mu} = 104$, $\hat{\phi_1} = 0.4$, $\hat{\phi_2} = 0.25$ and $\hat{\phi_3} = 0.1$. The last four observation were $Y_{n-3} = 105$, $Y_{n-2} = 102$, $Y_{n-1} = 103$ and $Y_n = 99$. Forecast $Y_{n+1}$ and $Y_{n+1}$.
+
+$$
+\begin{aligned}
+  \hat{Y}_{n+1} &= \mu + \phi_1(Y_{n} - \mu) + \phi_2(Y_{n-1} - \mu) + \phi_3(Y_{n-2} - \mu) \\
+  &= 104 + 0.4(99 - 104) + 0.25(103 - 104) + 0.1(102 - 104) \\
+  &= 101.55
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+  \hat{Y}_{n+2} &= \mu + \phi_1(\hat{Y}_{n+1} - \mu) + \phi_2(Y_{n} - \mu) + \phi_3(Y_{n-1} - \mu) \\
+  &= 104 + 0.4(101.55 - 104) + 0.25(99 - 104) + 0.1(103 - 104) \\
+  &= 101.67
+\end{aligned}
+$$
+
+4. Run the following code
+
+```{r, warning=FALSE, message=FALSE}
+library(Ecdat)
+data(Mishkin)
+tb1=log(Mishkin[,3])
+```
+
+  a) Use the time series and ACF plots to determine the amount of differentiation needed to obtain a stationary series.
+  
+```{r}
+plot(tb1)
+acf(tb1)
+```
+
+Without differentiation, both the time series and acf plots shows a non-stationary time series, since the time series plot shows a tendency, and the acf plot decreases steadily and not abruptly.
+
+```{r}
+tb2 <- diff(tb1)
+plot(tb2)
+acf(tb2)
+```
+
+Now, after one differentiation, we see a time series plot without tendency, so no more differentiation is needed, and the acf plot shows and abrupt decrease between the lags 1 and 2. That are hallmarks of a stationary time series.
+
+  b) Next use auto.arima to determine the best-ﬁtting nonseasonal ARIMA models. Use both AIC and BIC and compare results.
+  
+```{r}
+fit_aic <- auto.arima(tb1, ic = "aic", seasonal = FALSE)
+fit_aic
+cat("\n\n")
+fit_bic <- auto.arima(tb1, ic = "bic", seasonal = FALSE)
+fit_bic
+```
+
+Using _AIC_, _auto.arima_ has chosen the model **ARIMA(3,1,5)**, and using _BIC_ has chosen **ARIMA(0,1,1)**. If the purpose of our model is to make future predictions, we will prefer the model fitted using _AIC_, but if the purpose of our model is to explain an observed phenomenon, we will prefer the model fitted using _BIC_. Since the purpose of studying the treasury bill rate is to know if it is profitable to buy or sell or do nothing with it, we want to be able to make better predictions, so we will chose the **ARIMA(3,1,5)** model.
+
+  c) Examine the ACF of the residuals for the model you selected. Do you see any problems?
+  
+```{r}
+res <- residuals(fit_aic)
+acf(res)
+```
+
+It can seen that the correlation between the residuals grows as the lag increases, but all the acf values are not significant, we can conclude that the 
