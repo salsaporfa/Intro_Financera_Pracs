@@ -1,0 +1,120 @@
+---
+title: "Homework 0"
+author: 
+  - "Oliver Tarragó Boardman 1527541;"
+  - "Andrea Garcia Vigil 1635702;"
+  - "Àngel Casadó Cano 1630811;"
+  - "Marc Torre-Marin Pujol 1638100;"
+  - "Xinyu Lou 1635130"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Briefing:
+
+- **Net Returns:** Let $P_t$ be the price of an asset at time $t$, the net return is $$
+R_t=\frac{P_t}{P_{t-1}}-1=\frac{P_t-P_{t-1}}{P_{t-1}}
+$$.
+
+- **Log Returns:** Called continuously compounded returns are defined as:$$
+r_t=\log(1+R_t)=\log\bigg(\frac{P_t}{P_{t-1}}\bigg)=p_t-p_{t-1}
+$$
+where $p_t=\log(P_t)$ is called the log price.
+
+## Preparations:
+
+We use `quantmod` to download financial datasets and working on it.
+```{r setting, results='hide', message=FALSE, warning=FALSE}
+rm(list=ls())
+packages <- c("quantmod", "e1071","tseries")
+to_install <- packages[!vapply(packages, requireNamespace, logical(1), quietly = TRUE)]
+if (length(to_install) > 0) {
+  install.packages(to_install)
+}
+library("quantmod")
+library("e1071")
+library("tseries")
+options("getSymbols.warning4.0"=FALSE)
+cat("\f")
+
+getSymbols("GOOG", from="2011-01-03", to="2014-12-31")
+google_close <- GOOG$GOOG.Close
+
+getSymbols("SPX", from="2011-01-03", to="2014-12-31")
+spx_close <- SPX$SPX.Close
+```
+
+## Exercises
+
+### Exercise 1:
+
+Consider the daily net returns (from the Close price) of Google (GOOG) stock and the S&P composite index (SP) from January 3, 2011 to December 31, 2014. 
+
+a) Compute the sample mean, stadard deviation, skewness, excess kurtosis, minimum, and maximum of each series.
+```{r 1a, echo=FALSE}
+#1. a)
+  cat("Sample mean (Google): ", mean(google_close),"\n")
+  cat("Sample mean (S&P): ", mean(spx_close),"\n")
+  cat("Stadard deviation (Google): ", sd(google_close),"\n")
+  cat("Stadard deviation (S&P): ", sd(spx_close),"\n")
+  cat("Skewness (Google): ", kurtosis(google_close), "\n")
+  cat("Skewness (S&P): ", kurtosis(spx_close), "\n")
+  cat("Excess kurtosis (Google): ", kurtosis(google_close),"\n")
+  cat("Excess kurtosis (S&P): ", kurtosis(spx_close),"\n")
+  cat("Minimum and maximum (Google): ", 
+  "[", min(google_close), ",", max(google_close), "]",
+  "\n")
+  cat("Minimum and maximum (S&P): ", 
+  "[", min(spx_close), ",", max(spx_close), "]",
+  "\n")
+```
+b) Obtain the empirical density function of the net returns of Google stock. Are the daily net returns normally distributed? Why? Perform a normality test to justify your answer.
+```{r 1b.1, echo=FALSE}
+#1. b)
+  g_ret_simp <- na.omit(diff(google_close) / lag(google_close, k = -1))
+  g_ret_simp_dens <- density(as.numeric(g_ret_simp))
+  plot(g_ret_simp_dens,main = "GOOG Net Return Distribution" )
+  cat("Sample mode (GOOG Net Return): ",as.numeric(names(which.max(table(g_ret_simp)))),"\n")
+  cat("Sample mean (GOOG Net Return): ", mean(g_ret_simp),"\n")
+  cat("Sample median (GOOG Net Return): ", median(g_ret_simp),"\n")
+  cat("Skewness (GOOG Net Return): ", skewness(g_ret_simp))
+```
+  Generally, to be a prefect Normal distribution, the skewness of the of the figure of the distribution should be stricktly zero. Also, because of the last requirement, the sample mean, median and mode should be the same value. In this case we can see that the distribution has a positive skew, which means the plot of the distribution has a longer right tail and most of its value are in the left side of the graf. Also, we also can see, the sample mean, mode and median are not the same value, which we can assume the distribution of **Net Return** of Google stock is not Normal. 
+```{r 1b.2, echo = FALSE}
+  shapiro.test(as.numeric(g_ret_simp))
+  jarque.bera.test(as.numeric(g_ret_simp))
+```
+  The aim of both Shapiro-Wilks test and Jarque-Bera test is to detect the distribution of data is normally distributed being $\cal H_0$ as the distribution is Normal. With the p-value of both tests, we can conclude that the ditribution of **Net Return** of Google stock is not normally distributed. 
+
+c) Transform the net returns to log returns. Compute the sample mean, standard deviation, skewness, excess kurtosis, minimum, and maximum of each log return series.
+```{r 1c, echo=FALSE}
+#1. c) 
+  desc_stats <- function(x){
+    c(Mean = mean(x),
+      SD = sd(x),
+      Skewness = skewness(x),
+      Kurtosis = kurtosis(x) - 3,
+      Min = min(x),
+      Max = max(x))
+  }
+  g_ret_log <- na.omit(diff(log(google_close)))
+  s_ret_log <- na.omit(diff(log(spx_close)))
+  list(GOOG = desc_stats(g_ret_log),
+       S_P = desc_stats(s_ret_log))
+```
+
+d) Test the null hypothesis that the mean of the log returns of Google stock is zero.
+```{r 1d, echo=FALSE, warning=FALSE}
+#1. d)
+  t.test(g_ret_log)
+```
+The T-test returns a p-value bigger than 0.05, which means statistically the sample mean of **log-Google Net Return** is not zero.
+
+\newpage
+## Code Exihibition
+```{r ref.label=c("1a","1b.1","1b.2","1c","1d"),echo=TRUE,eval=FALSE}
+```
