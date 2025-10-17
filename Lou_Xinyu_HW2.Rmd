@@ -1,0 +1,75 @@
+---
+title: "Intro. enginyeria financera - HW1"
+author:
+- Lou, Xinyu ()
+- Tarragó Boardman, Oliver (1527541)
+date: "Last compiled on `r format(Sys.time(), '%d/%m/%Y')`"
+---
+
+# 1. Run the following code corresponding three quarterly time series data and answer the questions below.
+
+```{r, eval=FALSE}
+data(Tbrate, package="Ecdat")
+library(tseries)
+library(fGarch)
+# r = the 91 - day treasury bill rate
+# y = the log of real GDP
+# pi = the inflation rate
+
+Tbill = Tbrate[,1]
+Del.Tbill = diff(Tbill)
+
+garch.model = garchFit(formula =~ arma(1,0)+garch(1,0),Tbill)
+summary(garch.model)
+garch.model@fit$matcoef
+
+res = residuals(garch.model)
+res_std =res/garch.model@sigma.t
+par(mfrow=c(2,3))
+plot(res)
+acf(res)
+acf(res^2)
+plot(res_std)
+acf(res_std)
+acf(res_std^2) 
+```
+
+## (a) Plot both Tbill and Del.Tbill. Use both time series and ACF plots, ADF and KPSS test to show that the series are or are not stationary. What kind of heteroskedasticity can you see in Del.Tbill series?
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+data(Tbrate, package="Ecdat")
+library(tseries)
+library(fGarch)
+```
+
+```{r, message=FALSE, warning=FALSE}
+Tbill = Tbrate[,1]
+plot(Tbill)
+acf(Tbill)
+adf.test(Tbill)
+kpss.test(Tbill)
+
+```
+
+All the time series plot, the acf plot and tests shows clearly that the time series is not stationary.
+
+```{r, message=FALSE, warning=FALSE}
+Del.Tbill = diff(Tbill)
+plot(Del.Tbill)
+acf(Del.Tbill)
+adf.test(Del.Tbill)
+kpss.test(Del.Tbill)
+```
+
+The acf plot and the tests we could say that the time series is stationary. However, we can see in the time series plot that the variance is not stable across the time, presents a piecewise heteroskedasticity so is not stationary, but piecewise stationary.
+
+## (b) Fit an ARMA(1,0)/GARCH(1,0) model using garchFit to the series believed to be stationary. What are the estimates for the parameters in the model?
+
+
+```{r}
+garch.model = garchFit(formula =~ arma(1,0)+garch(1,0), Tbill)
+summary(garch.model)
+garch.model@fit$matcoef
+```
+
+
