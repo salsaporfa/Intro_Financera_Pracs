@@ -71,7 +71,7 @@ print(summary(garch.model))
 print(garch.model@fit$matcoef)
 ```
 
-For the AR(1) part the parameter estimate is $\hat{\phi}_1 = 0.9972569$ and for de GARCH(1, 0) = ARCH(1) the parameter estimates are $\hat{\omega} = 0.2865564$ and $\hat{\alpha}_0 = 0.9561833$.
+For the AR(1) part the parameter estimate is $\hat{\mu} = 0.1589966$ and $\hat{\phi}_1 = 0.9972569$ and for de GARCH(1, 0) = ARCH(1) the parameter estimates are $\hat{\omega} = 0.2865564$ and $\hat{\alpha}_1 = 0.9561833$.
 
 ## (c) What is plotted by acf(res)? What, if anything, does the plot tell you about the fit of the model?
 
@@ -83,4 +83,4 @@ plot(res)
 acf(res)
 ```
 
-After fitting an AR(1)+ARCH(1) model we see that the residuals still have some correlation between them,
+After fitting an AR(1)+ARCH(1) model we see that the residuals still have some correlation between them, since the lag 1 have a significant mild correlation. It would suggest AR(1) part is capturing most but not all the structure of the correlation and there is still some residual correlation unexplained.
