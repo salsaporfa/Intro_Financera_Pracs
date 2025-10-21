@@ -44,21 +44,20 @@ library(fGarch)
 
 ```{r, message=FALSE, warning=FALSE}
 Tbill = Tbrate[,1]
-plot(Tbill)
-acf(Tbill)
-adf.test(Tbill)
-kpss.test(Tbill)
-
+print(plot(Tbill))
+print(acf(Tbill))
+print(adf.test(Tbill))
+print(kpss.test(Tbill))
 ```
 
 All the time series plot, the acf plot and tests shows clearly that the time series is not stationary.
 
 ```{r, message=FALSE, warning=FALSE}
 Del.Tbill = diff(Tbill)
-plot(Del.Tbill)
-acf(Del.Tbill)
-adf.test(Del.Tbill)
-kpss.test(Del.Tbill)
+print(plot(Del.Tbill))
+print(acf(Del.Tbill))
+print(adf.test(Del.Tbill))
+print(kpss.test(Del.Tbill))
 ```
 
 The acf plot and the tests we could say that the time series is stationary. However, we can see in the time series plot that the variance is not stable across the time, presents a piecewise heteroskedasticity so is not stationary, but piecewise stationary.
@@ -66,10 +65,22 @@ The acf plot and the tests we could say that the time series is stationary. Howe
 ## (b) Fit an ARMA(1,0)/GARCH(1,0) model using garchFit to the series believed to be stationary. What are the estimates for the parameters in the model?
 
 
-```{r}
-garch.model = garchFit(formula =~ arma(1,0)+garch(1,0), Tbill)
-summary(garch.model)
-garch.model@fit$matcoef
+```{r, message=FALSE, warning=FALSE}
+garch.model = garchFit(formula =~ arma(1,0)+garch(1,0), Tbill, trace = FALSE)
+print(summary(garch.model))
+print(garch.model@fit$matcoef)
 ```
 
+For the AR(1) part the parameter estimate is $\hat{\phi}_1 = 0.9972569$ and for de GARCH(1, 0) = ARCH(1) the parameter estimates are $\hat{\omega} = 0.2865564$ and $\hat{\alpha}_0 = 0.9561833$.
 
+## (c) What is plotted by acf(res)? What, if anything, does the plot tell you about the fit of the model?
+
+```{r}
+res = residuals(garch.model)
+res_std =res/garch.model@sigma.t
+par(mfrow=c(2,3))
+plot(res)
+acf(res)
+```
+
+After fitting an AR(1)+ARCH(1) model we see that the residuals still have some correlation between them,
