@@ -10,66 +10,127 @@ date: "`r Sys.Date()`"
 output: pdf_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+# 1. Run the following code corresponding three quarterly time series data and answer the questions below.
+
+```{r, eval=FALSE}
+data(Tbrate, package="Ecdat")
+library(tseries)
+library(fGarch)
+# r = the 91 - day treasury bill rate
+# y = the log of real GDP
+# pi = the inflation rate
+
+Tbill = Tbrate[,1]
+Del.Tbill = diff(Tbill)
+
+garch.model = garchFit(formula =~ arma(1,0)+garch(1,0),Tbill)
+summary(garch.model)
+garch.model@fit$matcoef
+
+res = residuals(garch.model)
+res_std =res/garch.model@sigma.t
+par(mfrow=c(2,3))
+plot(res)
+acf(res)
+acf(res^2)
+plot(res_std)
+acf(res_std)
+acf(res_std^2) 
 ```
 
-# Exercise 1
+## (a) Plot both Tbill and Del.Tbill. Use both time series and ACF plots, ADF and KPSS test to show that the series are or are not stationary. What kind of heteroskedasticity can you see in Del.Tbill series?
 
-Run the following code corresponding three quarterly time series data and answer the questions below.
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+data(Tbrate, package="Ecdat")
+library(tseries)
+library(fGarch)
+```
+
+```{r, message=FALSE, warning=FALSE}
+Tbill = Tbrate[,1]
+print(plot(Tbill))
+print(acf(Tbill))
+print(adf.test(Tbill))
+print(kpss.test(Tbill))
+```
+
+All the time series plot, the acf plot and tests shows clearly that the time series is not stationary.
+
+```{r, message=FALSE, warning=FALSE}
+Del.Tbill = diff(Tbill)
+print(plot(Del.Tbill))
+print(acf(Del.Tbill))
+print(adf.test(Del.Tbill))
+print(kpss.test(Del.Tbill))
+```
+
+The acf plot and the tests we could say that the time series is stationary. However, we can see in the time series plot that the variance is not stable across the time, presents a piecewise heteroskedasticity so is not stationary, but piecewise stationary.
+
+## (b) Fit an ARMA(1,0)/GARCH(1,0) model using garchFit to the series believed to be stationary. What are the estimates for the parameters in the model?
+
+
+```{r, message=FALSE, warning=FALSE}
+garch.model = garchFit(formula =~ arma(1,0)+garch(1,0), Tbill, trace = FALSE)
+print(summary(garch.model))
+print(garch.model@fit$matcoef)
+```
+
+For the AR(1) part the parameter estimate is $\hat{\mu} = 0.1589966$ and $\hat{\phi}_1 = 0.9972569$ and for de GARCH(1, 0) = ARCH(1) the parameter estimates are $\hat{\omega} = 0.2865564$ and $\hat{\alpha}_1 = 0.9561833$.
+
+## (c) What is plotted by acf(res)? What, if anything, does the plot tell you about the fit of the model?
 
 ```{r}
- data(Tbrate,package="Ecdat")
- library(tseries)
- library(fGarch)
-#r = the 91-day treasury bill rate
-#pi = the inflation rate
-#y = the log of real GDP
-Tbill=Tbrate[,1]
-Del.Tbill=diff(Tbill)
-garch.model=garchFit(formula=~arma(1,0)+garch(1,0),Tbill)
-summary(garch.model) 
- garch.model@fit$matcoef 
+res = residuals(garch.model)
+res_std =res/garch.model@sigma.t
+par(mfrow=c(2,3))
+plot(res)
+acf(res)
+```
 
- res=residuals(garch.model) 
- res_std=res/garch.model@sigma.t 
- par(mfrow=c(2,3)) 
- plot(res)
- acf(res)
- acf(res^2)
- plot(res_std)
- acf(res_std)
+After fitting an AR(1)+ARCH(1) model we see that the residuals still have some correlation between them, since the lag 1 have a significant mild correlation. It would suggest AR(1) part is capturing most but not all the structure of the correlation and there is still some residual correlation unexplained.
+
+## (d) What is plotted by acf(res^2)? What, if anything does the plot tell you about the fit of the model?
+   
+```{r}
+acf(res^2)
+```
+   
+That plot shows wether autocorrelation remains in the conditional variance. We can see several points that stand out from the marked limit, which implies that we have uncalculated heteroscedasticity in the model. It don't explain fully variety.
+
+## (e) What is plotted by acf(res_std^2)? What if anything does the plot tell you about the fit of the model?
+  
+```{r}
+plot(res_std)
  acf(res_std^2)
 ```
 
-   (a) Plot both `Tbill`and `Del.Tbill`. Use both time series and ACF plots, ADF and KPSS test to show that the series are or are not stationary. What kind of heterostedasticity can you see in `Del.Tbill` series?
-```{r}
-Tbill=Tbrate[,1]
-Del.Tbill=diff(Tbill)
-par(mfrow=c(2,2))
-plot.ts(Tbill, main="T-bill")
-acf(Tbill, main="ACF Tbill")
-plot.ts(Del.Tbill, main="Diff D-bill")
-acf(Del.Tbill, main="ACF diff Tbill")
+In res_std^2 is plotted the autocorrelation function of the squared standardized residuals, which is used to check whether the GARCH model has successfully captured all conditional heteroscedasticity.
 
-adf.test(Tbill)
-kpss.test(Tbill)
-adf.test(Del.Tbill)
-kpss.test(Del.Tbill)
+About the fitting of the model we can say that the odel provided is adequate and the standardized residuals behave like white noisy
+
+
+## (f) Is there anything noteworthy in the plot produced by the plot (res_std)?
+   
+```{r}
+ acf(res_std)
 ```
 
-   (b) Fit an ARMA(1,0)/GARCH(1,0) model using `garchFit` to the series believed to be stationary? What are the estimates for the parameters in the model?
-   
-   (c) What is plotted by acf(res)? What, if anything, does the plot tell you about the fit of the model?
-   
-   (d) What is plotted by acf(res^2)? What, if anything does the plot tell you about the fit of the model?
-   
-   (e) What is plotted by acf(res_std^2)? What if anything does the plot tell you about the fit of the model?
-   
-   (f) Is there anything noteworthy in the plot produced by the plot (res_std)?
-   
-   (g) Now fit an ARMA/GARCH to the series `diff(log(Tbill))`. Do you see any advantages of working with the difference of the logarithms of the T-bill rate?
-   
+The presence of the values that exceed the significance lines. This indicates the presence of some ouliers at the extremes. Apart of this points, the others are around zero and don't have autocorrelation.
+
+
+## (g) Now fit an ARMA/GARCH to the series `diff(log(Tbill))`. Do you see any advantages of working with the difference of the logarithms of the T-bill rate?
+
+```{r}
+log_diff_Tbill = diff(log(Tbill))
+
+model_log = garchFit(~ arma(1,0) + garch(1,1), data = log_diff_Tbill)
+summary(model_log)
+
+```
+
+Fitting with that have the advantages that stabilizes the variance and ensures stationarity. Moreover we can capture mean and volability dynamics.
+
+
 # Exercise 2
 
 On Black Monday, the return on the S&P 500 was -22.8%. Ouch! This exercise attempts to answer the question, what was the conditional probability of a return this small on Black Monday? Conditional means given the information avaliable the previous trading day. Run the following code:
@@ -78,9 +139,9 @@ On Black Monday, the return on the S&P 500 was -22.8%. Ouch! This exercise attem
 library(Ecdat)
 library(fGarch)
 data(SP500,package="Ecdat")
-returnBM=SP500$r500[1805]
-x=SP500$r500[(1804-2*253+1):1804]
-plot(c(x,returnBM),type= '1' )
+returnBM = SP500$r500[1805]
+x = SP500$r500[(1804 - 2*253 + 1):1804]
+plot(c(x, returnBM), type = 'l')
 results=garchFit(~arma(1,0)+garch(1,1),data=x,cond.dist="std")
 dfhat=as.numeric(results@fit$par[6])
 forecast=predict(results,n.ahead=1)
@@ -89,13 +150,47 @@ forecast=predict(results,n.ahead=1)
 The SP500 returns are in the data set `SP500` in the `Ecdat` package. The returns are in the variable`r500`. Black Monday is the 1850th return in the data set. This code fits an AR(1)/GARCH(1,1) model to the last two years of data before Black Monday. The conditional distribution of the white noise is the t-distribution. From the plot you can see that the Black Monday was highly unusual. The parameter estimates are in results@fit$par and the sixth parameter are the degrees of freedom of the t-distribution. The predict function is used to predict one step ahead. The object `forecast` will contain, mean forecast, mean error and standard deviation, which is the conditional standard deviation of the return on Black Monday.
  
    (a) Use the information above to calculate the conditional probability of a return less or equal to-0.228 on Black Monday.
-   
+
+```{r}
+mu_hat = forecast$meanForecast
+sigma_hat = forecast$standardDeviation
+dfhat = as.numeric(results@fit$par[6])
+z = (-0.228 - mu_hat) / sigma_hat
+(p_blackmonday = pt(z, df = dfhat))
+
+
+```
+ 
    (b) Compute and plot the standarized residuals. Also plot the `ACF` of the residuals and their squares. Do they indicate an adequate model fit?
    
+```{r}
+resid_std = residuals(results, standardize = TRUE)
+
+par(mfrow=c(2,2))
+plot(resid_std, type='l', main="Standardized Residuals")
+acf(resid_std, main="ACF of Residuals")
+acf(resid_std^2, main="ACF of Squared Residuals")
+qqnorm(resid_std); qqline(resid_std)
+
+```
+
+Yes, that fitting are good because we don't have autocorrelation and white noise.
+
    (c) Would an AR(1)/ARCH(1) model provide an adequate fit?
+```{r}
+results_arch = garchFit(~arma(1,0)+garch(1,0), data=x, cond.dist="std")
+```
    
    (d) Does an AR(1) model provide an adequate fit?
-   
+
+```{r}
+ar1 = arima(x, order=c(1,0,0))
+res_ar1 = residuals(ar1)
+par(mfrow=c(1,2))
+acf(res_ar1)
+acf(res_ar1^2)
+```
+
 # Exercise 3
 
 Download the data set `data_HW_3.RData` from Moodle. Follow the step-by-step model selection to fit an ARMA(p,q)/GARCH(P,Q) model to it. (Hint: q=0 and all other orders are less or equal to 2)
