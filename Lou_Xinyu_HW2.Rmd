@@ -6,7 +6,7 @@ author:
 date: "Last compiled on `r format(Sys.time(), '%d/%m/%Y')`"
 ---
 
-# 1. Run the following code corresponding three quarterly time series data and answer the questions below.
+### 1. Run the following code corresponding three quarterly time series data and answer the questions below.
 
 ```{r, eval=FALSE}
 data(Tbrate, package="Ecdat")
@@ -24,7 +24,7 @@ summary(garch.model)
 garch.model@fit$matcoef
 
 res = residuals(garch.model)
-res_std =res/garch.model@sigma.t
+res_std = res/garch.model@sigma.t
 par(mfrow=c(2,3))
 plot(res)
 acf(res)
@@ -34,7 +34,7 @@ acf(res_std)
 acf(res_std^2) 
 ```
 
-## (a) Plot both Tbill and Del.Tbill. Use both time series and ACF plots, ADF and KPSS test to show that the series are or are not stationary. What kind of heteroskedasticity can you see in Del.Tbill series?
+#### (a) Plot both Tbill and Del.Tbill. Use both time series and ACF plots, ADF and KPSS test to show that the series are or are not stationary. What kind of heteroskedasticity can you see in Del.Tbill series?
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 data(Tbrate, package="Ecdat")
@@ -62,7 +62,7 @@ print(kpss.test(Del.Tbill))
 
 The acf plot and the tests we could say that the time series is stationary. However, we can see in the time series plot that the variance is not stable across the time, presents a piecewise heteroskedasticity so is not stationary, but piecewise stationary.
 
-## (b) Fit an ARMA(1,0)/GARCH(1,0) model using garchFit to the series believed to be stationary. What are the estimates for the parameters in the model?
+#### (b) Fit an ARMA(1,0)/GARCH(1,0) model using garchFit to the series believed to be stationary. What are the estimates for the parameters in the model?
 
 
 ```{r, message=FALSE, warning=FALSE}
@@ -73,7 +73,7 @@ print(garch.model@fit$matcoef)
 
 For the AR(1) part the parameter estimate is $\hat{\mu} = 0.1589966$ and $\hat{\phi}_1 = 0.9972569$ and for de GARCH(1, 0) = ARCH(1) the parameter estimates are $\hat{\omega} = 0.2865564$ and $\hat{\alpha}_1 = 0.9561833$.
 
-## (c) What is plotted by acf(res)? What, if anything, does the plot tell you about the fit of the model?
+#### (c) What is plotted by acf(res)? What, if anything, does the plot tell you about the fit of the model?
 
 ```{r}
 res = residuals(garch.model)
@@ -83,4 +83,160 @@ plot(res)
 acf(res)
 ```
 
-After fitting an AR(1)+ARCH(1) model we see that the residuals still have some correlation between them, since the lag 1 have a significant mild correlation. It would suggest AR(1) part is capturing most but not all the structure of the correlation and there is still some residual correlation unexplained.
+After fitting an AR(1)+ARCH(1) model we see that the residuals still have some correlation between them, since the lag 1 have a mildly significant correlation. It would suggest AR(1) part is capturing most but not all the structure of the correlation and there is still some residual correlation unexplained.
+
+
+#### (d) What is plotted by acf(res^2)? What, if anything, does the plot tell you about the ﬁt of the model?
+
+```{r}
+acf(res^2)
+```
+
+There is still autocorrelation in the variance that is not captured in the ARCH(1) part. The wave form of the plot suggest the need for a GARCH model, that is, a non-zero _q_ for the _GARCH(p, q)_ part of the model.
+
+#### (e) What is plotted by acf(res std^2)? What, if anything, does the plot tell you about the ﬁt of the model?
+
+```{r}
+acf(res_std^2)
+```
+
+There are no significant lags, which means that we don't need to increase the ARCH order.
+
+#### (f) Is there anything noteworthy in the plot produced by the plot(res_std)?
+
+```{r}
+plot(res_std)
+```
+
+
+Visually the standardized residuals don't seem completely a white noise, which suggest that there still remains information unexplained by the model.
+
+#### (g) Now ﬁt an ARMA/GARCH to the series `diff(log(Tbill))`. Do you see any advantages of working with the difference of the logarithms of the T-bill rate?
+
+```{r}
+fit <- garchFit(formula =~ arma(1,0)+garch(1,0), diff(log(Tbill)), trace = FALSE)
+
+res = residuals(fit)
+res_std =res/fit@sigma.t
+
+plot(res_std)
+
+par(mfrow=c(2,2))
+acf(res_std)
+pacf(res_std)
+acf(res_std^2)
+pacf(res_std^2)
+```
+
+Working with the difference of the logarithms of the T-bill rate we end with standardized residuals that seem nearer to a white noise, and the ACF and PACF plots of the standardized residuals and the squared standardized residuals show no correlation between the standardized residuals. We see the advantage that the logarithm reduces the variance and the difference makes the series more stationary. Also we are modeling the returns (log-returns) which have an meaningful economic value.
+
+## 2. On Black Monday, the return on the S&P 500 was -22.8%. Ouch! This exercise attempts to answer the question, what was the conditional probability of a return this small on Black Monday? Conditional means given the information available the previous trading day. Run the following code:
+  
+```{r}
+library(Ecdat)
+library(fGarch)
+data(SP500,package="Ecdat")
+returnBM = SP500$r500[1805]
+x = SP500$r500[(1804 - 2*253 + 1):1804]
+plot(c(x, returnBM), type = 'l')
+results=garchFit(~arma(1,0)+garch(1,1),data=x,cond.dist="std", trace = FALSE)
+dfhat=as.numeric(results@fit$par[6])
+forecast=predict(results,n.ahead=1)
+```
+
+The SP500 returns are in the data set `SP500` in the `Ecdat` package. The returns are in the variable`r500`. Black Monday is the 1850th return in the data set. This code fits an AR(1)/GARCH(1,1) model to the last two years of data before Black Monday. The conditional distribution of the white noise is the t-distribution. From the plot you can see that the Black Monday was highly unusual. The parameter estimates are in results@fit$par and the sixth parameter are the degrees of freedom of the t-distribution. The predict function is used to predict one step ahead. The object `forecast` will contain, mean forecast, mean error and standard deviation, which is the conditional standard deviation of the return on Black Monday.
+ 
+#### (a) Use the information above to calculate the conditional probability of a return less or equal to 0.228 on Black Monday.
+
+```{r}
+mu_hat = forecast$meanForecast
+sigma_hat = forecast$standardDeviation
+dfhat = as.numeric(results@fit$par[6])
+z = (-0.228 - mu_hat) / sigma_hat
+(p_blackmonday = pt(z, df = dfhat))
+```
+
+#### (b) Compute and plot the standarized residuals. Also plot the `ACF` of the residuals and their squares. Do they indicate an adequate model fit?
+
+```{r}
+resid_std = residuals(results, standardize = TRUE)
+
+par(mfrow=c(2,2))
+plot(resid_std, type='l', main="Standardized Residuals")
+acf(resid_std, main="ACF of Residuals")
+acf(resid_std^2, main="ACF of Squared Residuals")
+qqnorm(resid_std); qqline(resid_std)
+```
+
+The residuals seem to be white noise, and the ACF plots shows no correlation between the residuals, so it seems an adequate model.
+
+#### (c) Would an AR(1)/ARCH(1) model provide an adequate fit?
+
+```{r}
+results_arch = garchFit(~arma(1,0)+garch(1,0), data=x, cond.dist="std", trace = FALSE)
+resid_std = residuals(results_arch, standardize = TRUE)
+
+par(mfrow=c(2,2))
+plot(resid_std, type='l', main="Standardized Residuals")
+acf(resid_std, main="ACF of Residuals")
+acf(resid_std^2, main="ACF of Squared Residuals")
+qqnorm(resid_std); qqline(resid_std)
+```
+
+It seems to be a model pretty similar to the _ARMA(1,0)+GARCH(1,1) model, so it would provide an adecuate fit.
+
+(d) Does an AR(1) model provide an adequate fit?
+
+```{r}
+ar1 = arima(x, order=c(1,0,0))
+res_ar1 = residuals(ar1)
+
+par(mfrow=c(2,2))
+plot(res_ar1, type='l', main="Residuals")
+acf(res_ar1, main="ACF of Residuals")
+acf(res_ar1^2, main="ACF of Squared Residuals")
+qqnorm(res_ar1); qqline(res_ar1)
+```
+
+Again, the residuals seem white noise and the ACF plots don't show any correlation between them, so it seems that an _AR(1)_ model would suffice.
+
+## 3. Download the data set `data_HW_3.RData` from Moodle. Follow the step-by-step model selection to fit an ARMA(p,q)/GARCH(P,Q) model to it. (Hint: q=0 and all other orders are less or equal to 2)
+
+```{r}
+load("data_HW_3.RData")
+plot(x, type='l')
+print(adf.test(x))
+print(kpss.test(x))
+acf(x)
+pacf(x)
+```
+
+According to the time series plot and the unit root tests, the series is stationary. According to the PACF we would choose _p=2_. According the to ACF we would consider _1<q<5_, but following the hint we will keep it at 0.
+
+```{r}
+fit <- arima(x, order = c(2, 0, 0))
+res = residuals(fit)
+
+plot(res, type='l', main="Residuals")
+par(mfrow=c(2,2))
+acf(res, main="ACF of Residuals")
+pacf(res, main="PACF of Residuals")
+acf(res^2, main="ACF of Squared Residuals")
+pacf(res^2, main="PACF of Squared Residuals")
+```
+
+The PACF of the squared residuals indicates that we need _Q=1_, and the ACF of the squared residuals indicates that we need a garch component, we will try _P=1_.
+
+```{r}
+fit <- garchFit(~arma(2,0)+garch(1,1), data=x, cond.dist="std", trace = FALSE)
+res = residuals(fit, standardize = TRUE)
+
+plot(res, type='l', main="Residuals")
+par(mfrow=c(2,2))
+acf(res, main="ACF of STD Residuals")
+pacf(res, main="PACF of STD Residuals")
+acf(res^2, main="ACF of Squared STD Residuals")
+pacf(res^2, main="PACF of Squared STD Residuals")
+```
+
+The model seems now well fitted, so our final choose would be to use an ARMA(1,0)+GARCH(1,1) model.
