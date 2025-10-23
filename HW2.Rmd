@@ -174,13 +174,15 @@ qqnorm(resid_std); qqline(resid_std)
 
 ```
 
-Yes, that fitting are good because we don't have autocorrelation and white noise.
+Yes, that fitting are good because we don't see autocorrelation and white noise in the acf of residuals and the acf of squared residuals we can see volatility.
 
    (c) Would an AR(1)/ARCH(1) model provide an adequate fit?
 ```{r}
 results_arch = garchFit(~arma(1,0)+garch(1,0), data=x, cond.dist="std")
 ```
    
+That model converges correctly and their parameters are plausible. The mean is near zero and volatility is low persistent. Fot that we can conclude that provide an adequate fit
+
    (d) Does an AR(1) model provide an adequate fit?
 
 ```{r}
@@ -190,6 +192,8 @@ par(mfrow=c(1,2))
 acf(res_ar1)
 acf(res_ar1^2)
 ```
+
+That model has an unadequate fit because in plots acf we can see some dependeces because it has many lags above the significance line indicate that there is significant autocorrelation remaining in the series, meaning the model does not fully capture the dependence structure.
 
 # Exercise 3
 
