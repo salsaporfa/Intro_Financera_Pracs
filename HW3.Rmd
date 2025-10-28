@@ -1,0 +1,44 @@
+---
+title: "HW3"
+author: "Àngel Casadó (1630811)"
+date: "2025-10-28"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercise 2
+
+A stock currently trades at \$60. A Call with strike price \$58 and expiry 12 months trades at \$3; a Put with the same strike and expiry trades at \$2. The interest rate at 12 months is 10\%.
+
+-Do any arbitrage opportunities exist?
+
+```{r}
+C <- 3
+P <- 2
+K <- 58
+S0 <- 60
+t <- 0
+r <- 0.10
+T <- 1
+
+K_disc <- K * exp(-r * (T-t))
+left_side <- C + K_disc
+right_side <- P + S0
+diff<-right_side-left_side
+diff<-round(diff,2)
+list(left_side = left_side, right_side = right_side, diff=diff)
+```
+
+We can observe how this equality $P+S_0 \ \ \neq \ \ C+Ke^{-r*(T-t)}$, does not hold, and therefore the put-call parity indicates that there is indeed an arbitrage opportunity.
+
+-If there is a possible arbitrage, then explain the strategy to get profit from it.
+
+The difference between both sides of the put–call parity equation represents the the arbitrage profit, which is $`r diff`.
+
+The strategy said that if $S_T>K$ we use CALL to buy without additional cost, but if $S_T<K$ PUT paid the K, closing the operation.
+
+In both cases, there are no further cash flows at maturity, so the profit of $`r diff` is risk-free and requires no forward contract.
+
