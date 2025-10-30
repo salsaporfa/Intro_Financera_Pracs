@@ -1,0 +1,186 @@
+---
+title: "Homework 3"
+author: 
+  - "Oliver Tarragó Boardman 1527541;"
+  - "Andrea Garcia Vigil 1635702;"
+  - "Àngel Casadó Cano 1630811;"
+  - "Marc Torre-Marin Pujol 1638100;"
+  - "Xinyu Lou 1635130"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+## Exercise 1:
+
+Complete the following questionnaire for each of the option strategies (there are 7 different strategies) (all strategies have the same expiry and are written on the same underlying, consider the spot price to be 100):
+
+a) Write down the payoff function in formulas (without premiums).
+
+__Payoff__ is the function that describes the profit or loss of the derivative depending on the current level of the underlying. Its mathematical expression is $f(x)=x-F$, being F considered as the strike (the amount for which the underlying can be bought or sold), also it can be written as K. 
+
+- __Long Forward__: $f(S_T)=S_T-K$;
+- __Short Forward__: $f(S_T)=K-S_T$;
+- __Long Call__: $f(S_T)=\max (S_T-K,0)$;
+- __Short Call__: $f(S_T)=\min(0,K-S_T)$;
+- __Long Put__: $f(S_T)=\max(K-S_T,0)$;
+- __Short Put__: $f(S_T)=\min (0,S_T-K)$;
+- __Long Call + Short Put (The Pull-Call parity)__:
+  $$
+  \begin{aligned}
+  f(S_T) &= \lim_{t\to T}C(t,T,K,S)-\lim_{t\to T}P(t,T,K,S)\\
+         &= \max(S_T-K,0)-\max(K-S_T,0)\\
+         &= \lim_{t\to T} S_t - Ke^{-r(T-t)}=S_T-K
+  \end{aligned}
+  $$.
+
+b) Plot the payoff function without premiums (show in different colours the building blocks of the strategy and the aggregated result).
+```{r 1b, echo=FALSE, out.width="8cm"}
+#1. b
+#Long Forward:
+  S_T <- seq(0, 100, by = .1)
+  K <- 50
+  PayOff <- S_T - K
+  plot(S_T, PayOff, type = "l", lwd = 2, col = "blue",
+       xlim = c(0,100),
+       xlab = expression(S[T]), 
+       ylab = "Profit / Loss",
+       main = "Long Foward")
+  abline(h = 0, col = "gray", lty = 2)
+  abline(v = K, col = "darkgreen", lty = 2, lwd = 1.5)
+  text(K, par("usr")[3], 
+       labels = bquote(K), pos = 1, 
+       col = "darkgreen", xpd = TRUE)
+#Short Forward:
+  S_T <- seq(100, 0, by = -.1)
+  K <- 50
+  PayOff <- K - S_T
+  plot(S_T, PayOff, type = "l", lwd = 2, col = "blue",
+       xlim = c(0,100),
+       xlab = expression(S[T]), 
+       ylab = "Profit / Loss",
+       main = "Short Forward")
+  abline(h = 0, col = "gray", lty = 2)
+  abline(v = K, col = "darkgreen", lty = 2, lwd = 1.5)
+  text(K, par("usr")[3], 
+       labels = bquote(K), pos = 1, col = "darkgreen", xpd = TRUE)
+#Long Call:
+  S_T <- seq(0, 100, by = .1)
+  K <- 50
+  PayOff <- S_T - K
+  PayOff[PayOff < 0] <- 0
+  plot(S_T, PayOff, type = "l", lwd = 2, col = "blue",
+       xlim = c(0,100),
+       ylim = c(-50,50),
+       xlab = expression(S[T]), 
+       ylab = "Profit / Loss",
+       main = "Long Call")
+  abline(h = 0, col = "gray", lty = 2)
+  abline(v = K, col = "darkgreen", lty = 2, lwd = 1.5)
+  text(K, par("usr")[3], 
+       labels = bquote(K), pos = 1, col = "darkgreen", xpd = TRUE)
+#Short Call:
+  S_T <- seq(0, 100, by = .1)
+  K <- 50
+  PayOff <- K - S_T
+  PayOff[PayOff > 0] <- 0
+  plot(S_T, PayOff, type = "l", lwd = 2, col = "blue",
+       xlim = c(0,100),
+       ylim = c(-50,50),
+       xlab = expression(S[T]), 
+       ylab = "Profit / Loss",
+       main = "Short Call")
+  abline(h = 0, col = "gray", lty = 2)
+  abline(v = K, col = "darkgreen", lty = 2, lwd = 1.5)
+  text(K, par("usr")[3], 
+       labels = bquote(K), pos = 1, col = "darkgreen", xpd = TRUE)
+#Long Put:
+  S_T <- seq(0, 100, by = .1)
+  K <- 50
+  PayOff <- K - S_T
+  PayOff[PayOff<0] <- 0
+  plot(S_T, PayOff, type = "l", lwd = 2, col = "blue",
+       xlim = c(0,100),
+       ylim = c(-50,50),
+       xlab = expression(S[T]), 
+       ylab = "Profit / Loss",
+       main = "Long Put")
+  abline(h = 0, col = "gray", lty = 2)
+  abline(v = K, col = "darkgreen", lty = 2, lwd = 1.5)
+  text(K, par("usr")[3], 
+       labels = bquote(K), pos = 1, col = "darkgreen", xpd = TRUE)  
+  
+#Short Put:
+  S_T <- seq(0, 100, by = .1)
+  K <- 50
+  PayOff <- S_T - K
+  PayOff[PayOff > 0] <- 0
+  plot(S_T, PayOff, type = "l", lwd = 2, col = "blue",
+       xlim = c(0,100),
+       ylim = c(-50,50),
+       xlab = expression(S[T]), 
+       ylab = "Profit / Loss",
+       main = "Short Put")
+  abline(h = 0, col = "gray", lty = 2)
+  abline(v = K, col = "darkgreen", lty = 2, lwd = 1.5)
+  text(K, par("usr")[3], 
+       labels = bquote(K), pos = 1, col = "darkgreen", xpd = TRUE)
+```
+```{r 1b2, echo=FALSE}
+
+#Put-Call Parity:
+  S_T <- seq(0, 100, by = .1)
+  K <- 50
+  PayOff <- S_T - K
+  PayOff[PayOff < 0] <- 0
+  plot(S_T, PayOff, type = "l", lwd = 2, col = "green",
+       xlim = c(0,100),
+       ylim = c(-50,50),
+       xlab = expression(S[T]), 
+       ylab = "Profit / Loss",
+       main = "Long Call - Short Put")
+  S_T <- seq(0, 100, by = .1)
+  K <- 50
+  PayOff <- S_T - K
+  PayOff[PayOff > 0] <- 0
+  lines(S_T, PayOff, col="red", lwd=2)
+  abline(h = 0, col = "gray", lty = 2)
+  abline(v = K, col = "darkgreen", lty = 2, lwd = 1.5)
+  text(K, par("usr")[3], 
+       labels = bquote(K), pos = 1, col = "darkgreen", xpd = TRUE)
+```
+
+c) Investigate and explain in your own words the financial rationale of the strategy.
+
+    - __Long Forward__:
+  
+      Being in an agreement where the buying counterpart _A_ promises to buy an asset, _S_, from another counterpart _B_, at a specific time in the future, _T_, at some specific price _K_, agreed today, _t_. No money hands until the end of the contract.
+  
+    - __Short Foward__:
+    
+      Being in an agreement where the buying counterpart _B_ promises to sell an asset, _S_, to another counterpart _A_, at a specific time in the future, _T_, at some specific price _K_, agreed today, _t_. No money hands until the end of the contract.
+      
+    - __Long a Call__:
+    
+      An agreement where the counterpart _A_ buys the right but not the obligation to buy an asset paying and premium, _S_ from another party, B, at a specific time in the future, _T_ at some specific price, _K_, agreed today _t_. The terms of it make it a right for _A_ but an obligation for _B_ should _A_ exercise the right. 
+      
+    - __Short a Call__:
+    
+      An agreement where the counterpart _A_ sells the obligation but not the right to buy an asset, _S_ from another party, B, at a specific time in the future, _T_ at some specific price, _K_, agreed today _t_. The terms of it make it a right for _B_ but an obligation for _A_ should _B_ exercise the right.
+      
+    - __Long a Put__:
+    
+      An agreement where the counterpart _A_ buys the right but not the obligation to sell an asset, _S_ from another party, B, at a specific time in the future, _T_ at some specific price, _K_, agreed today _t_. The terms of it make it a right for _A_ but an obligation for _B_ should _A_ exercise the right.
+    
+    - __Short a Put___:
+      An agreement where the counterpart _A_ sells the obligation but not the right to sell an asset, _S_ from another party, B, at a specific time in the future, _T_ at some specific price, _K_, agreed today _t_. The terms of it make it a right for _B_ but an obligation for _A_ should _B_ exercise the right.
+
+d) Plot a profit diagram for arbitrary premiums (although arbitrary, premium must fulfill the right order and magnitude between them).
+
+## Exercise 2:
+
+A stock currently trades at \$60
+
+\newpage
+## Code Exihibition
+```{r ref.label=c("1b", "1b2"),echo=TRUE,eval=FALSE}
+```
