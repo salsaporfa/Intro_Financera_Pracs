@@ -1,0 +1,409 @@
+---
+title: "Homework 3"
+author: 
+  - "Oliver Tarragó Boardman 1527541;"
+  - "Andrea Garcia Vigil 1635702;"
+  - "Àngel Casadó Cano 1630811;"
+  - "Marc Torre-Marin Pujol 1638100;"
+  - "Xinyu Lou 1635130"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+## Exercise 1:
+
+Complete the following questionnaire for each of the option strategies (there are 7 different strategies) (all strategies have the same expiry and are written on the same underlying, consider the spot price to be 100):
+
+a) Write down the payoff function in formulas (without premiums).
+
+__Payoff__ is the function that describes the profit or loss of the derivative depending on the current level of the underlying. Its mathematical expression is $f(x)=x-F$, being F considered as the strike (the amount for which the underlying can be bought or sold), also it can be written as K. 
+
+- __Bull Call Spread__: 
+$$
+\begin{aligned}
+f(S_T)&=C(K_1)-C(K_2)=\max(S_T-K_1,0)-\max(S_T-K_2,0)\\
+&=\left\{ \begin{matrix}
+            K_1-S_T&S_T\leq K_1\\
+            K_1-K_2& K_1<S_T<K_2\\
+            0 & S_T\geq K_2
+          \end{matrix}
+          \right.
+\end{aligned}
+$$
+- __Bear Call Spread__: 
+$$
+\begin{aligned}
+f(S_T)&=P(K_2)-P(K_1)=\max(S_T-K_1,0)-\max(S_T-K_2,0)\\
+&=\left\{ \begin{matrix}
+            0&S_\leq K_1\\
+            K_1-S_T & K_1<S_T<K_2\\
+            K_1-K_2 & S_T\geq K_2
+          \end{matrix}
+          \right.
+\end{aligned}
+$$
+- __Covered Call__:
+$$
+\begin{aligned}
+&f(S_T)=S-C(K)=S_t-S_0-\max(S_T-K,0)=\max(S_T-S_0,K-S_0)\\ &\Rightarrow
+f(S_T)=\left\{ \begin{matrix}
+                S_T-S_0 & S_T \leq K\\
+                K-S_0 & S_T > K
+               \end{matrix}\right.
+\end{aligned}
+$$
+- __Covered Put__:
+$$
+\begin{aligned}
+&f(S_T)=-S-P(K)=-(S_T-S_0)-\max(K-S_T,0)\\ 
+&\Rightarrow
+f(S_T)=\left\{ \begin{matrix}
+                K-S_0 & S_T < K\\
+                -(S_T-S_0) & S_T \geq K
+               \end{matrix}\right.
+\end{aligned}
+$$
+- __Collar__:
+$$
+\begin{aligned}
+&f(S_T)=S-C(K_2)+P(K_1)=(S_T-S_0)-\max(S_T-K_2,0)+\max(K_1-S_T,0)\\
+&\Rightarrow f(S_T)=\left\{ \begin{matrix}
+                K_1-S_0 & S_T\leq K_1\\
+                S_T-S_0 & K_1<S_T<K_2\\
+                K_2-S_0 & S_T\geq K_2
+               \end{matrix}\right.
+\end{aligned}
+$$
+- __Butterfly__:
+$$
+\begin{aligned}
+&f(S_T)=C(K_1)-2C(K_2)+C(K_3)=\max(S_T-K_1,0)-2\max(S_T-K_2,0)+\max(S_T-K_3,0) \\
+&\Rightarrow f(S_T)=\left\{ \begin{matrix}
+                0 & S_T\leq K_1\\
+                S_T-K_1 & K_1<S_T<K_2\\
+                K_3-S_T & K_2<S_T<K_3\\
+                0 & S_T>K_3
+               \end{matrix}\right.
+\end{aligned}
+$$
+
+-__Condor__
+$$
+\begin{aligned}
+f(S_T)&=C(K_1)-C(K_2)-C(K_3)+C(K_4)\\
+&= \max(S_T-K_1,0)-\max(S_T-K_2,0)-\max(S_T-K_3,0)-\max(S_T-K_4,0)\\
+&= \left\{ \begin{matrix}
+                0 & S_T\leq K_1\\
+                S_T-K_1 & K_1<S_T<K_2\\
+                K_2-K_1 & K_2<S_T<K_3\\
+                K_4-S_T & K_3<S_T\leq K_4\\
+                0 & S_T>K_4
+               \end{matrix}\right.
+\end{aligned}
+$$
+
+b) Plot the payoff function without premiums (show in different colours the building blocks of the strategy and the aggregated result).
+```{r 1b, echo=FALSE, out.width="8cm"}
+#1. b
+#Bull Call Spread:
+  S_T <- seq(0, 200, by = 1)
+  S_0 <- 100
+  K1 <- 100
+  K2 <- 120
+  PayOff <- numeric(length(S_T))
+  for (i in 1:length(S_T)) {
+    if (S_T[i] <= K1) {
+      PayOff[i] <- K2-K1
+    } else if (S_T[i] > K1 && S_T[i] < K2) {
+      PayOff[i] <- K2 - S_T[i]
+    }
+    else {
+      PayOff[i] <- 0
+    }
+  }
+  
+  do_plot <- function(main, color) {
+    plot(S_T, PayOff, type = "l", lwd = 2, col = color,
+        xlim = c(0,200),
+        ylim = c(-60,60),
+        xlab = expression(S[T]), 
+        ylab = "Profit / Loss",
+        main = main)
+    abline(h = 0, col = "gray", lty = 2)
+  }
+  do_plot("Bull Call Spread","darkgreen")
+  
+#Bear Put Spread:
+  for (i in 1:length(S_T)) {
+    if (S_T[i] <= K1) {
+      PayOff[i] <- 0
+    } else if (S_T[i] > K1 && S_T[i] < K2) {
+      PayOff[i] <- K1 - S_T[i]
+    }
+    else {
+      PayOff[i] <- K1-K2
+    }
+  }
+  do_plot("Bear Put Spread","red")
+
+#Covered Call: 
+  K <- 110
+  for (i in 1:length(S_T)) {
+    if (S_T[i] <= K) {
+      PayOff[i] <- S_T[i]-S_0
+    } else 
+      PayOff[i] <- K - S_0
+  }
+  do_plot("Covered Call","blue")
+  
+#Covered Put:
+  K <- 90
+  for (i in 1:length(S_T)) {
+    if (S_T[i] < K) {
+      PayOff[i] <- K - S_0
+    } else 
+      PayOff[i] <- -(S_T[i]-S_0)
+  }
+    do_plot("Covered Put","black")
+#Collar
+  K1 <- 90
+  K2 <- 110
+  for (i in 1:length(S_T)) {
+    if (S_T[i] <= K1) {
+      PayOff[i] <- K1 - S_0
+    } else if(S_T[i] > K1 && S_T[i] < K2){
+      PayOff[i] <- S_T[i]-S_0
+    } else if (S_T[i] >= K2)
+      PayOff[i]  <- K2 - S_0
+  }
+    do_plot("Collar","darkgreen")
+
+#Butterfly
+    K1 <- 90
+    K2 <- 100
+    K3 <- 110
+    for (i in 1:length(S_T)) {
+    if (S_T[i] <= K1) {
+      PayOff[i] <- K1 - S_0
+    } else if(S_T[i] > K1 && S_T[i] <= K2){
+      PayOff[i] <- S_T[i]-K1
+    } else if (S_T[i] > K2 && S_T[i] <= K3){
+      PayOff[i]<-K3-S_T[i]
+    } else
+      PayOff[i]  <- 0
+    }
+    do_plot("Butterfly","darkred")
+    
+# Condor
+    K1 <- 90
+    K2 <- 100
+    K3 <- 110
+    K4 <- 120
+    
+    for (i in 1:length(S_T)) {
+    if (S_T[i] <= K1) {
+      PayOff[i] <- K1 - S_0
+    } else if(S_T[i] > K1 && S_T[i] <= K2){
+      PayOff[i] <- S_T[i]-K1
+    } else if (S_T[i] > K2 && S_T[i] <= K3){
+      PayOff[i]<-K2-K1
+    } else if (K3 < S_T[i] && S_T[i] <= K4){
+      K4 - S_T[i]
+    }
+      else
+      PayOff[i]  <- 0
+    }
+    do_plot("Condor","darkblue")
+```
+
+c) Investigate and explain in your own words the financial rationale of the strategy.
+
+    - __Bull and Bear Spreads__:
+    
+      The aim of Bull Spreads is to profit from a moderate rise in the in the underlying. It can be performed as "buying low call, selling high call", long a call at a lower strike and Short a call at the higher strike than the long call strike, instead of buying a single call, the investor give up some upside. For the Bull Spread, the insvestor uses puts instead of calls. The profit idea is the opposit of Bull Spreads strategy, you short the asset at a higher strike and long it back at the lower strike, "buying a high put, selling lower put".
+  
+    - __Covered Call__:
+    
+      The execution of Covered Call is to generate income if the investor already own the stock, to do that is long a stock then short a call. Applying it, we can "rent out" our stock for extra yield (the option premium) as long as the stock price grows up moderately or keeping it flat. 
+      
+    - __Covered Pull__:
+    
+      Similar to the covered call but with a reversed philosophy. The investor short the stock and short a put. You can earn the premium as long as the stock price goes down or keeping it flat. 
+      
+    - __Collar__:
+    
+      A defensive strategy to protect downside and limit upside. The investor longs a stock, longs a put and short a call. This strategy is to ensure that the investor can't loose more than a certain amount of price. 
+      
+    - __Butterfly Spread__:
+    
+      To profit the stock if price stays near a certain level (low volatility on price). The investor long a call at a low strike $K_1$, then he longs two calls at middle strike $K_2$ and finally buys a call at high strike $K_3$. In conclusion, the agent makes profit as long as the the market stays calm. 
+      
+    - __Condor Spread__:
+    
+      Similar to the las strategy with four steps, long a call at $K_1$, short a call at $K_2$, short an another call at $K_3$ and long a call at $K_4$, being that $K_1<K_2<K_3<K_4$. In this strategy, the profit is created between two inner short calls and the outer long call are responsible for capping the risks on both sides. 
+
+d) Plot a profit diagram for arbitrary premiums (although arbitrary, premium must fulfill the right order and magnitude between them).
+```{r 1d, echo=FALSE, out.width="8cm"}
+#1. d
+#Bull Call Spread:
+  premium <- 5
+  S_T <- seq(0, 200, by = 1)
+  S_0 <- 100
+  K1 <- 100
+  K2 <- 120
+  PayOff <- numeric(length(S_T))
+  for (i in 1:length(S_T)) {
+    if (S_T[i] <= K1) {
+      PayOff[i] <- K2-K1
+    } else if (S_T[i] > K1 && S_T[i] < K2) {
+      PayOff[i] <- K2 - S_T[i]
+    }
+    else {
+      PayOff[i] <- 0
+    }
+  }
+  
+  do_plot <- function(main, color) {
+    profit <- PayOff-premium
+    plot(S_T, profit, type = "l", lwd = 2, col = color,
+        xlim = c(0,200),
+        ylim = c(-60,60),
+        xlab = expression(S[T]), 
+        ylab = "Profit / Loss",
+        main = main)
+    abline(h = 0, col = "gray", lty = 2)
+  }
+  do_plot("Bull Call Spread","darkgreen")
+  
+#Bear Put Spread:
+  for (i in 1:length(S_T)) {
+    if (S_T[i] <= K1) {
+      PayOff[i] <- 0
+    } else if (S_T[i] > K1 && S_T[i] < K2) {
+      PayOff[i] <- K1 - S_T[i]
+    }
+    else {
+      PayOff[i] <- K1-K2
+    }
+  }
+  do_plot("Bear Put Spread","red")
+
+#Covered Call: 
+  K <- 110
+  for (i in 1:length(S_T)) {
+    if (S_T[i] <= K) {
+      PayOff[i] <- S_T[i]-S_0
+    } else 
+      PayOff[i] <- K - S_0
+  }
+  do_plot("Covered Call","blue")
+  
+#Covered Put:
+  K <- 90
+  for (i in 1:length(S_T)) {
+    if (S_T[i] < K) {
+      PayOff[i] <- K - S_0
+    } else 
+      PayOff[i] <- -(S_T[i]-S_0)
+  }
+    do_plot("Covered Put","black")
+#Collar
+  K1 <- 90
+  K2 <- 110
+  for (i in 1:length(S_T)) {
+    if (S_T[i] <= K1) {
+      PayOff[i] <- K1 - S_0
+    } else if(S_T[i] > K1 && S_T[i] < K2){
+      PayOff[i] <- S_T[i]-S_0
+    } else if (S_T[i] >= K2)
+      PayOff[i]  <- K2 - S_0
+  }
+    do_plot("Collar","darkgreen")
+
+#Butterfly
+    K1 <- 90
+    K2 <- 100
+    K3 <- 110
+    for (i in 1:length(S_T)) {
+    if (S_T[i] <= K1) {
+      PayOff[i] <- K1 - S_0
+    } else if(S_T[i] > K1 && S_T[i] <= K2){
+      PayOff[i] <- S_T[i]-K1
+    } else if (S_T[i] > K2 && S_T[i] <= K3){
+      PayOff[i]<-K3-S_T[i]
+    } else
+      PayOff[i]  <- 0
+    }
+    do_plot("Butterfly","darkred")
+    
+# Condor
+    K1 <- 90
+    K2 <- 100
+    K3 <- 110
+    K4 <- 120
+    
+    for (i in 1:length(S_T)) {
+    if (S_T[i] <= K1) {
+      PayOff[i] <- K1 - S_0
+    } else if(S_T[i] > K1 && S_T[i] <= K2){
+      PayOff[i] <- S_T[i]-K1
+    } else if (S_T[i] > K2 && S_T[i] <= K3){
+      PayOff[i]<-K2-K1
+    } else if (K3 < S_T[i] && S_T[i] <= K4){
+      K4 - S_T[i]
+    }
+      else
+      PayOff[i]  <- 0
+    }
+    do_plot("Condor","darkblue")
+```
+
+## Exercise 2:
+
+A stock currently trades at \$60. A Call with strike price \$58 and expiry 12 months is 10\%. 
+
+```{r ex2, echo=FALSE}
+#2
+  C <- 3
+  P <- 2
+  K <- 58
+  S0 <- 60
+  t <- 0
+  r <- 0.10
+  T <- 1
+  
+  K_disc <- K * exp(-r * (T-t))
+  right_side <- C + K_disc
+  left_side <- P + S0
+  diff<-abs(right_side-left_side)
+  diff<-round(diff,2)
+  print(list(left_side = left_side, right_side = right_side, diff=diff))
+```
+
+- Do any aribitrage opportunity exist?
+
+We can observe how this equality $P+S_0  \neq  C+Ke^{-r\cdot(T-t)}$, does not hold, and therefore the put-call parity indicates that there is indeed an arbitrage opportunity.
+
+- If there is a possible arbitrage, the explain the strategy to get profit form it. 
+
+The difference between both sides of the put–call parity equation represents the the arbitrage profit, which is `r diff`.
+
+Since $P + S_0 > C + K e^{-r\cdot(T-t)}$, the strategy is to sell the left side (the put and the stock) and to buy a call and put the $K e^{-r\cdot(T-t)}$ in a risk-free deposit.
+
+In both cases, there are no further cash flows at maturity, so the profit of `r diff` is risk-free and requires no forward contract.
+
+- Sell the put: +2
+- Sell the stock: +60
+- Buy the call: -3
+- Deposit $58e^{-0.1} = 52.48$: -52.48
+
+The benefit is = 2 + 60 - 3 - 52.48 = 6.52
+
+If $S_T>K$ we exert the call to buy at `r K`, give the stock and recover the deposit worth of 58, but if $S_T<K$ we by the stock to the buyer of the put at 58, and recover the deposit worth of 58.
+
+In both cases, there are no further cash flows at maturity, so the profit of `r diff` is risk-free and requires no forward contract.
+
+\newpage
+## Code Exihibition
+```{r ref.label=c("1b", "1d","ex2"),echo=TRUE,eval=FALSE}
+```
